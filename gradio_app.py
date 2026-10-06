@@ -44,7 +44,7 @@ def validate_calendar_file(file_path: str) -> Optional[Path]:
 
     try:
         resolved = Path(file_path).resolve()
-    except OSError:
+    except (OSError, ValueError):  # ValueError: path contains a null byte
         return None
 
     if resolved.suffix.lower() != ".ics" or not resolved.is_file():
