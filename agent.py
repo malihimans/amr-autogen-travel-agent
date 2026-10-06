@@ -546,8 +546,9 @@ class TravelAgent:
             safe_name = re.sub(r'[^\w\-_]', '_', (trip_name or 'itinerary'))[:30]
             filename = f"{timestamp}_{safe_name}.ics"
             
-            # Save file
-            calendar_dir = Path(__file__).parent / "assets" / "calendars" / user_id
+            # Save file (user_id is sanitized so it cannot escape the calendars directory)
+            safe_user_id = re.sub(r'[^\w\-_]', '_', str(user_id))[:50] or 'default'
+            calendar_dir = Path(__file__).parent / "assets" / "calendars" / safe_user_id
             calendar_dir.mkdir(parents=True, exist_ok=True)
             file_path = calendar_dir / filename
             
