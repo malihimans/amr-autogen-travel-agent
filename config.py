@@ -18,7 +18,8 @@ class AppConfig(BaseSettings):
     tavily_api_key: str = Field(..., env="TAVILY_API_KEY", description="Tavily API key")
 
     # Model Configuration
-    travel_agent_model: str = Field(default="gpt-4.1", env="TRAVEL_AGENT_MODEL", description="OpenAI model name for the travel agent")
+#    travel_agent_model: str = Field(default="gpt-4.1", env="TRAVEL_AGENT_MODEL", description="OpenAI model name for the travel agent")
+    travel_agent_model: str = Field(default="gpt-4.1-mini", env="TRAVEL_AGENT_MODEL", description="OpenAI model name for the travel agent")
     mem0_model: str = Field(default="gpt-4.1-mini", env="MEM0_MODEL", description="OpenAI LLM name for the travel agent memory system")
     mem0_embedding_model: str = Field(default="text-embedding-3-small", env="MEM0_EMBEDDING_MODEL", description="OpenAI embedding model for Mem0 memory system")
     mem0_embedding_model_dims: int = Field(default=1536, env="MEM0_EMBDDING_MODEL_DIMS", description="Embedding dimensions for OpenAI embedding model")

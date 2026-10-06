@@ -70,7 +70,7 @@ class TravelAgentUI:
         """Initialize the UI with a travel agent instance."""
         self.config = config or get_config()
         self.agent = TravelAgent(config=self.config)
-        self.current_user_id = "Tyler"  # Default user ID
+        self.current_user_id = "Himanshu"  # Default user ID
         self.initial_history = []  # Will be populated async
         self.user_ids = []  # Dynamic users loaded from seed
         self.latest_calendar_file = None  # Track latest generated calendar
@@ -81,7 +81,7 @@ class TravelAgentUI:
             # Init seed data for all users
             await self.agent.initialize_seed_data()
             users = self.agent.get_all_user_ids()
-            # Sort users but ensure Tyler (current_user_id) is first if present
+            # Sort users but ensure Himanshu (current_user_id) is first if present
             sorted_users = sorted(users)
             if self.current_user_id in sorted_users:
                 sorted_users.remove(self.current_user_id)
@@ -225,7 +225,7 @@ class TravelAgentUI:
                 user_tab_components = {}
                 # Default selected is the first tab; ensure user_ids prepared in initialize_chat_history
                 with gr.Tabs(selected=0) as user_tabs:
-                    for uid in (self.user_ids or ["Tyler"]):
+                    for uid in (self.user_ids or ["Himanshu"]):
                         with gr.Tab(uid) as _tab:
                             user_tab_components[uid] = _tab
             

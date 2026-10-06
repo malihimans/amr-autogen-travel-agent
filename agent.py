@@ -33,6 +33,7 @@ from autogen_core.tools import FunctionTool
 from autogen_core.memory import MemoryContent, MemoryMimeType
 from autogen_ext.models.openai import OpenAIChatCompletionClient
 from autogen_ext.memory.mem0 import Mem0Memory
+from redis import Redis
 from tavily import TavilyClient
 from ics import Calendar, Event, DisplayAlarm
 from ics.grammar.parse import ContentLine
@@ -214,25 +215,47 @@ class TravelAgent:
         """Return a unified list of user IDs from currently cached contexts."""
         return self._user_ctx_cache.keys()
 
+    def _seed_marker_key(self, user_id: str) -> str:
+        """Redis key set after a user's seed.json insights have been written once."""
+        return f"travel_agent:seeded:{user_id}"
+
     async def _init_seed_users(self) -> None:
-        """Initialize seed users with memories from seed.json."""
+        """Initialize seed users with memories from seed.json.
+
+        Each user context is still created so the UI can list them. Memory writes
+        run only when travel_agent:seeded:{user_id} is absent, and that marker is
+        set only after every insight for the user is stored. Delete the key to
+        re-apply seed.json for that user.
+        """
         seed_data = self._load_seed_data()
         user_memories = seed_data.get("user_memories", {})
-        
-        for user_id, memories in user_memories.items():
-            try:
-                ctx = self._get_or_create_user_ctx(str(user_id))
-                print(f"🌱 Seeding memory for user: {user_id}")
-                for memo in memories:
-                    # Add memory content to Mem0
-                    await ctx.memory.add(MemoryContent(
-                        content=memo["insight"],
-                        mime_type=MemoryMimeType.TEXT
-                    ))
-                print(f"✅ Seeded {len(memories)} memories to Redis for user: {user_id}")
-            except Exception as e:
-                print(f"❌ Failed to seed memory for user {user_id}: {e}")
-                continue
+        redis_client = Redis.from_url(self.config.redis_url, decode_responses=True)
+
+        try:
+            for user_id, memories in user_memories.items():
+                user_id = str(user_id)
+                try:
+                    ctx = self._get_or_create_user_ctx(user_id)
+                    marker_key = self._seed_marker_key(user_id)
+                    if redis_client.exists(marker_key):
+                        print(f"🌱 Seed already applied for user: {user_id}")
+                        continue
+                    if not memories:
+                        continue
+
+                    print(f"🌱 Seeding memory for user: {user_id}")
+                    for memo in memories:
+                        await ctx.memory.add(MemoryContent(
+                            content=memo["insight"],
+                            mime_type=MemoryMimeType.TEXT
+                        ))
+                    redis_client.set(marker_key, "1")
+                    print(f"✅ Seeded {len(memories)} memories to Redis for user: {user_id}")
+                except Exception as e:
+                    print(f"❌ Failed to seed memory for user {user_id}: {e}")
+                    continue
+        finally:
+            redis_client.close()
 
     def _create_agent(
         self,
